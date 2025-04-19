@@ -31,3 +31,43 @@ Designed the app on figma. Implemented frontend using swiftui. Cerebas for AI. R
 ## What's next for SHIPSmart
 
 ## Demo Video
+
+
+## Modeling log:
+
+Benefit Extraction
+
+Parsed the UC‑Davis Anthem Benefit Book PDF into structured text (ExtractText.py → UCD‑Anthem‑Benefit‑Book.txt).
+
+Extracted key policy parameters (deductibles, copays, coinsurance, OOP limits) into a Python script (ExtractBenefit.py) and loaded them into Postgres (policy_parameters table).
+
+Database & Sample Data
+
+Defined the schema in create_shipsmart_db.sql (tables: policy_parameters, visits, claims).
+
+Populated policy_parameters via InsertPolicy.sql.
+
+Created a small sample dataset under data/ (visits.csv, claims.csv) and loaded it with \copy.
+
+Feature Engineering in SQL
+
+visit_policy view: joins each visit to its plan’s parameters.
+
+visit_features view: running sums of student payments → deductible remaining.
+
+training_data view: computes
+
+service_copay based on CPT code ranges (ER, primary care, imaging)
+
+coinsurance_share = (allowed_amount – deductible_remaining – copay) × coinsurance%, floored at zero
+
+actual student_pay (target).
+
+MVP Regression Pipeline
+
+Exported training_data → data/training_data.csv.
+
+Wrote model.py to load the CSV, train a baseline LinearRegression on two features (service_copay, coinsurance_share), and report MAE.
+
+
+
