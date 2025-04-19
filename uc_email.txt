@@ -1,0 +1,9 @@
+List of all UC Email Addess
+1. UC Berkely: berkeley
+2. UC Davis: ucdavis
+3. UCLA: ucla 
+4. uc merced: ucmerced
+4. uc riverside: ucr
+5. uc santa cruz: ucsc
+6. uc santa barbara: ucsb
+7. uc irvine: UCI 
