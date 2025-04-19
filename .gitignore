@@ -3,14 +3,6 @@ __pycache__/
 *.py[cod]
 *.class
 
-# Virtual environments
-Hack/
-venv/
-.env/
-
-# Data exports
-data/*.csv
-
 # macOS
 .DS_Store
 

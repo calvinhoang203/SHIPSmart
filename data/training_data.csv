@@ -1,0 +1,3 @@
+visit_id,student_uid,provider_npi,cpt_code,service_date,plan_year,deductible,family_deductible,er_copay,imaging_copay,primary_care_copay,coinsurance_pct,oop_per_member,oop_per_family,paid_to_date,deductible_remaining,allowed_amount,actual_student_pay,service_copay,coinsurance_share
+1,S12345,1234567890,99213,2024-10-01,2024-25,200.00,400.00,150.00,25.00,15.00,80.00,4500.00,9000.00,0,200.00,150.00,15.00,15.00,0.00000000000000000000
+2,S67890,0987654321,93000,2024-11-15,2024-25,200.00,400.00,150.00,25.00,15.00,80.00,4500.00,9000.00,0,200.00,450.00,15.00,0,200.0000000000000000000000
