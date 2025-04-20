@@ -3,7 +3,7 @@ import Foundation
 @MainActor
 class CerebrasAPI: ObservableObject {
     private let session: URLSession
-    private let apiKey = "csk-n8jpex53cwk58hvpx9ch6jvjpe4eh48p9f38vdjphj2tkcxr"
+    private let apiKey = ""
     @Published var isLoading = false
     
     private let systemPrompt = """
@@ -50,7 +50,7 @@ class CerebrasAPI: ObservableObject {
             ],
             "model": "llama-4-scout-17b-16e-instruct",
             "stream": false,
-            "temperature": 0.30,
+            "temperature": 1,
             "top_p": 1,
             "max_tokens": 8192
         ]

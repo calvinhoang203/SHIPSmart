@@ -217,22 +217,23 @@ struct ChatbotView: View {
             chatHeader
             
             ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(viewModel.messages) { message in
-                            MessageBubble(message: message)
-                        }
-                    }
-                    .padding(.vertical)
+              ScrollView {
+                LazyVStack(spacing: 12) {
+                  ForEach(viewModel.messages) { message in
+                    MessageBubble(message: message)
+                      .id(message.id)
+                  }
                 }
-                .onChange(of: viewModel.messages) { _ in
-                    if let lastMessage = viewModel.messages.last {
-                        withAnimation {
-                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                        }
-                    }
+                .padding(.vertical)
+              }
+              .onChange(of: viewModel.messages) { oldMessages, newMessages in
+                guard let last = newMessages.last else { return }
+                withAnimation {
+                  proxy.scrollTo(last.id, anchor: .bottom)
                 }
+              }
             }
+
             
             inputArea
         }
