@@ -18,12 +18,6 @@ struct SHIPSmartApp: App {
     @StateObject private var authViewModel = AuthenticationViewModel()
     @Environment(\.scenePhase) private var scenePhase: ScenePhase
     
-    init() {
-        #if DEBUG
-        AppEnvironment.loadEnvFile()
-        #endif
-    }
-    
     var body: some Scene {
         WindowGroup {
             Group {

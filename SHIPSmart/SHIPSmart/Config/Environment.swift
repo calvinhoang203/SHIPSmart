@@ -27,10 +27,31 @@ final class AppEnvironment {
     }
     
     static var cerebrasApiKey: String {
-        guard let apiKey = value(for: EnvironmentKeys.cerebrasApiKey) else {
+        guard let apiKey = ProcessInfo.processInfo.environment["CEREBRAS_API_KEY"] else {
+            // For development, use a default key if environment variable is not set
+            #if DEBUG
+            return "csk-n8jpex53cwk58hvpx9ch6jvjpe4eh48p9f38vdjphj2tkcxr"
+            #else
             fatalError("CEREBRAS_API_KEY not found in environment")
+            #endif
         }
         return apiKey
+    }
+    
+    static var baseURL: URL {
+        guard let urlString = ProcessInfo.processInfo.environment["CEREBRAS_BASE_URL"] else {
+            // Default to production URL if not specified
+            return URL(string: "https://api.cerebras.ai")!
+        }
+        return URL(string: urlString)!
+    }
+    
+    static var isDebug: Bool {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
     }
 }
 
