@@ -209,47 +209,40 @@ struct ThreeDotIndicator: View {
 
 struct ChatbotView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var api = CerebrasAPI()
-    @State private var messages: [ChatComponents.Message] = []
-    @State private var inputText = ""
-    @State private var isTyping = false
-    
-    @State private var selectedDoctor: ChatComponents.Doctor?
-    @State private var isBookingConfirmation = false
+    @StateObject private var viewModel = ChatbotViewModel()
+    @FocusState private var isFocused: Bool
     
     var body: some View {
         VStack(spacing: 0) {
             chatHeader
             
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(messages) { m in
-                        ChatComponents.BubbleView(
-                            message: m,
-                            onYesPressed: handleYesResponse,
-                            onNoPressed: handleNoResponse,
-                            onDoctorSelected: handleDoctorSelected
-                        )
-                    }
-                    if isTyping {
-                        HStack {
-                            ThreeDotIndicator()
-                            Spacer()
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(viewModel.messages) { message in
+                            MessageBubble(message: message)
                         }
-                        .padding(.horizontal)
+                    }
+                    .padding(.vertical)
+                }
+                .onChange(of: viewModel.messages) { _ in
+                    if let lastMessage = viewModel.messages.last {
+                        withAnimation {
+                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
+                        }
                     }
                 }
-                .padding(.vertical)
             }
             
             inputArea
         }
-        .onAppear(perform: addWelcomeMessage)
     }
     
     private var chatHeader: some View {
         HStack {
-            Button { dismiss() } label: {
+            Button {
+                dismiss()
+            } label: {
                 Image(systemName: "chevron.left")
                     .foregroundColor(.blue)
             }
@@ -265,140 +258,71 @@ struct ChatbotView: View {
     
     private var inputArea: some View {
         HStack(spacing: 12) {
-            TextField("Type a message…", text: $inputText)
+            TextField("Type a message…", text: $viewModel.inputMessage)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-                .onSubmit { sendMessage() }
+                .focused($isFocused)
+                .disabled(viewModel.isLoading)
+                .onSubmit {
+                    sendMessage()
+                }
             
             Button(action: sendMessage) {
                 Image(systemName: "arrow.up.circle.fill")
                     .font(.system(size: 24))
-                    .foregroundColor(inputText.isEmpty ? .gray : .blue)
+                    .foregroundColor(viewModel.inputMessage.isEmpty ? .gray : .blue)
             }
-            .disabled(inputText.isEmpty)
+            .disabled(viewModel.inputMessage.isEmpty || viewModel.isLoading)
         }
         .padding()
         .background(Color(.systemBackground))
     }
     
-    // MARK: - Helpers
-    
-    private func withLoading(_ work: @escaping () async -> Void) {
-        isTyping = true
-        Task {
-            // always show loading first
-            try? await Task.sleep(nanoseconds: 1_000_000_000)
-            await work()
-            isTyping = false
-        }
-    }
-    
-    private func addWelcomeMessage() {
-        messages.append(.init(
-            content: "Hello! I'm SHIPSmart, your UC SHIP assistant. How can I help you today?",
-            isUser: false, isError: false, showButtons: false, showDoctors: false
-        ))
-    }
-    
     private func sendMessage() {
-        let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return }
-        
-        messages.append(.init(content: text, isUser: true))
-        inputText = ""
-        
-        let intent = ChatComponents.InputValidation.intent(of: text)
-        if intent == .appointment {
-            withLoading {
-                messages.append(.init(
-                    content: "I'll help you schedule an appointment. Please choose from our available doctors below:",
-                    isUser: false, showDoctors: true))
-            }
-            return
-        }
-        
-        let (valid, error) = ChatComponents.InputValidation.validate(text)
-        if !valid {
-            withLoading {
-                messages.append(.init(
-                    content: error!, isUser: false, isError: true))
-            }
-            return
-        }
-        
-        withLoading {
-            do {
-                let response = try await api.sendMessage(text)
-                messages.append(.init(
-                    content: response,
-                    isUser: false,
-                    showButtons: response.contains("Does everything look correct?"),
-                    showDoctors: response.contains("choose from available doctors")
-                ))
-            } catch {
-                messages.append(.init(
-                    content: "Sorry, I encountered an error. Please try again.",
-                    isUser: false, isError: true))
-            }
+        Task {
+            await viewModel.sendMessage()
         }
     }
+}
+
+struct MessageBubble: View {
+    let message: Message
     
-    private func handleYesResponse() {
-        if isBookingConfirmation, let doctor = selectedDoctor {
-            messages.append(.init(content: "Yes", isUser: true))
-            withLoading {
-                messages.append(.init(
-                    content: "🎉 Your appointment with \(doctor.name) has been booked! Anything else I can help with?",
-                    isUser: false, showButtons: true))
-                isBookingConfirmation = false
-                selectedDoctor = nil
+    var body: some View {
+        HStack {
+            if message.isUser { Spacer() }
+            
+            VStack(alignment: message.isUser ? .trailing : .leading, spacing: 8) {
+                HStack(alignment: .top, spacing: 8) {
+                    if !message.isUser {
+                        Image("Bot Icon")
+                            .resizable()
+                            .frame(width: 30, height: 30)
+                            .clipShape(Circle())
+                    }
+                    
+                    Text(message.content)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(
+                            message.isError ? Color.red.opacity(0.1) :
+                                (message.isUser ? Color.blue : Color(.systemGray6))
+                        )
+                        .foregroundColor(
+                            message.isError ? .red :
+                                (message.isUser ? .white : .primary)
+                        )
+                        .cornerRadius(20)
+                }
+                
+                if message.isStreaming {
+                    ThreeDotIndicator()
+                        .padding(.leading, 38)
+                }
             }
-        } else {
-            reply("yes")
+            
+            if !message.isUser { Spacer() }
         }
-    }
-    
-    private func handleNoResponse() {
-        messages.append(.init(content: "No", isUser: true))
-        // final “anything else?” handler
-        if !isBookingConfirmation,
-           let last = messages.last(where: { !$0.isUser && $0.showButtons })
-        {
-            withLoading {
-                messages.append(.init(
-                    content: "Alright! Glad I could help. Have a wonderful day!",
-                    isUser: false))
-            }
-            return
-        }
-        reply("no")
-    }
-    
-    private func reply(_ answer: String) {
-        withLoading {
-            do {
-                let response = try await api.sendMessage(answer)
-                messages.append(.init(
-                    content: response,
-                    isUser: false,
-                    showButtons: response.contains("Does everything look correct?"),
-                    showDoctors: response.contains("choose from available doctors")
-                ))
-            } catch {
-                messages.append(.init(
-                    content: "Sorry, I encountered an error. Please try again.",
-                    isUser: false, isError: true))
-            }
-        }
-    }
-    
-    private func handleDoctorSelected(_ doctor: ChatComponents.Doctor) {
-        selectedDoctor = doctor
-        isBookingConfirmation = true
-        withLoading {
-            messages.append(.init(
-                content: "Great choice! \(doctor.name) is available next week. Would you like me to book a slot?",
-                isUser: false, showButtons: true))
-        }
+        .padding(.horizontal)
     }
 }
 
