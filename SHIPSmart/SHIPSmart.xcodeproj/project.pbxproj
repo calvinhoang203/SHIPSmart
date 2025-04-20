@@ -59,7 +59,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		ADA952622DB4582C00759857 /* Exceptions for "SHIPSmart" folder in "SHIPSmart" target */ = {
+		AD4117482DB4F45E009E6001 /* Exceptions for "SHIPSmart" folder in "SHIPSmart" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -72,7 +72,7 @@
 		ADA951F72DB44ED800759857 /* SHIPSmart */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				ADA952622DB4582C00759857 /* Exceptions for "SHIPSmart" folder in "SHIPSmart" target */,
+				AD4117482DB4F45E009E6001 /* Exceptions for "SHIPSmart" folder in "SHIPSmart" target */,
 			);
 			path = SHIPSmart;
 			sourceTree = "<group>";
@@ -499,6 +499,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SHIPSmart/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SHIPSmart;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -527,6 +528,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SHIPSmart/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = SHIPSmart;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

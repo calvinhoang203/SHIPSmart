@@ -11,65 +11,39 @@ import GoogleSignIn
 import FirebaseAnalytics
 import Network
 
-class AppDelegate: NSObject, UIApplicationDelegate {
-    private var networkMonitor = NWPathMonitor()
-    private let queue = DispatchQueue(label: "NetworkMonitor")
-    
-    func application(_ application: UIApplication,
-                    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        // Configure Firebase
-        if let options = FirebaseOptions(contentsOfFile: Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist")!) {
-            FirebaseApp.configure(options: options)
-        }
-        
-        // Configure Analytics
-        Analytics.setAnalyticsCollectionEnabled(true)
-        
-        // Start monitoring network
-        startNetworkMonitoring()
-        
-        return true
-    }
-    
-    func application(_ app: UIApplication,
-                    open url: URL,
-                    options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        return GIDSignIn.sharedInstance.handle(url)
-    }
-    
-    private func startNetworkMonitoring() {
-        networkMonitor.pathUpdateHandler = { path in
-            if path.status == .satisfied {
-                print("Network connection established")
-            } else {
-                print("No network connection")
-            }
-        }
-        networkMonitor.start(queue: queue)
-    }
-}
-
 @main
 struct SHIPSmartApp: App {
+    // Register the app delegate
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var authViewModel = AuthenticationViewModel()
-    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.scenePhase) private var scenePhase: ScenePhase
+    
+    init() {
+        #if DEBUG
+        AppEnvironment.loadEnvFile()
+        #endif
+    }
     
     var body: some Scene {
         WindowGroup {
-            // Temporarily bypassing authentication
-            // if authViewModel.isAuthenticated {
-            //     HomeView()
-            //         .environmentObject(authViewModel)
-            // } else {
-            //     LoginView()
-            //         .environmentObject(authViewModel)
-            // }
-            
-            // Direct to ChatbotView for testing
-            ChatbotView()
+            Group {
+                if authViewModel.isAuthenticated {
+                    HomeView()
+                } else {
+                    LoginView()
+                }
+            }
+            .environmentObject(authViewModel)
+            .onOpenURL { (url: URL) in
+                print("Received URL: \(url)")
+                if GIDSignIn.sharedInstance.handle(url) {
+                    print("URL handled by Google Sign In")
+                } else {
+                    print("URL not handled by Google Sign In: \(url)")
+                }
+            }
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { (oldPhase: ScenePhase, newPhase: ScenePhase) in
             switch newPhase {
             case .active:
                 print("App became active")

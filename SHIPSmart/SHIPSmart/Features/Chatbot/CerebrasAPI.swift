@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Configuration
 enum CerebrasConfig {
     static let baseURL = URL(string: "https://api.cerebras.ai")!
-    static let apiKey = "csk-n8jpex53cwk58hvpx9ch6jvjpe4eh48p9f38vdjphj2tkcxr"
+    static let apiKey = AppEnvironment.cerebrasApiKey
 }
 
 // MARK: - Models
@@ -38,17 +38,16 @@ struct Tool: Codable {
 struct ToolFunction: Codable {
     let name: String
     let description: String
-    let parameters: Parameters
-    let strict: Bool
+    let parameters: ToolParameters
 }
 
-struct Parameters: Codable {
+struct ToolParameters: Codable {
     let type: String
-    let properties: [String: PropertyDetails]
+    let properties: [String: ParameterProperty]
     let required: [String]
 }
 
-struct PropertyDetails: Codable {
+struct ParameterProperty: Codable {
     let type: String
     let description: String
 }
@@ -125,8 +124,8 @@ enum CerebrasError: Error {
 
 // MARK: - API Client
 actor CerebrasAPI {
-    private let apiKey = "csk-n8jpex53cwk58hvpx9ch6jvjpe4eh48p9f38vdjphj2tkcxr"
-    private let baseURL = URL(string: "https://api.cerebras.ai")!
+    private let apiKey: String
+    private let baseURL: URL
     private let session: URLSession
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
@@ -147,6 +146,8 @@ actor CerebrasAPI {
             "User-Agent": "SHIPSmart/1.0 (iOS)"
         ]
         
+        self.apiKey = AppEnvironment.cerebrasApiKey
+        self.baseURL = CerebrasConfig.baseURL
         self.session = URLSession(configuration: config)
         self.decoder = JSONDecoder()
         self.encoder = JSONEncoder()
@@ -183,6 +184,49 @@ actor CerebrasAPI {
         3. Be clear about which services are available at which locations
         4. Maintain a professional and helpful tone
         5. If you're unsure about specific policy details, direct users to the appropriate contact number
+        6. If input is not a completed sentence and does not have the meanning, send the message to user retype the prompt, such as "aaaaasfvvsdds", "afadfafaa", "agafgagibnibnrobriotb", "gweguhegheheghi", ... 
+        
+        1. Greeting Detection
+                   • Recognize common greetings: hi, hey, hello, good morning/afternoon/evening, morning, afternoon, evening  
+                   → intent = greeting
+
+        2. Insurance Detection
+           • Recognize insurance‐related keywords: benefits, coverage, insurance, covered, plan, medical, health, dental, vision, prescription, copay, deductible, premium  
+           → intent = insurance
+
+        3. Appointment Detection
+           • Recognize appointment‐related keywords: appointment, schedule, book, visit, see a doctor, doctor, consultation, checkup, check‐up, meet, available, slot, time, date  
+           → intent = appointment
+
+        4. Short Phrase Allowlist
+           • Allow common short responses: yes, no, ok, okay, thanks, thank you, bye, goodbye, sure, please  
+           → always valid
+
+        5. Gibberish Detection
+           • Reject input with any of:
+             – Repeating characters (>2 in a row), e.g. “aaaa”  
+             – Random consonant runs (5+ consonants), e.g. “bcdfg”  
+             – No known words combined with length >3  
+           • Known words = greetings ∪ insuranceKeywords ∪ validShortPhrases ∪ commonEnglishWords  
+           → if detected, reply: “I don’t understand your message. Could you please rephrase it?”
+
+        6. General Input Validation
+           • Trim whitespace; if empty, reply: “Please enter a message.”  
+           • If length <2, reply: “Your message is too short. Please provide more details.”  
+           • For >2 words, require at least one verb or noun or interjection; otherwise reply: “Please provide a complete sentence or question.”  
+           • For longer text, if no valid structure or very neutral sentiment with no verbs/nouns, reply: “I don’t understand your message. Could you please rephrase it?”
+
+        7. Intent Fallback
+           • If no greeting, insurance, or appointment keywords detected, intent = other  
+           • For “other” intent, guide user to provide student ID, DOB, and medical ID as needed
+
+        When responding:
+        1. Always reference specific policy numbers and details when relevant  
+        2. Provide accurate contact info and locations  
+        3. Maintain a professional, helpful tone  
+        4. If unsure of details, direct users to the appropriate phone number  
+        5. If input fails validation, prompt user to retype or clarify
+        
         """
         
         // Set up tools
@@ -192,17 +236,16 @@ actor CerebrasAPI {
                 function: ToolFunction(
                     name: "search_policy",
                     description: "Search through policy information to find relevant details",
-                    parameters: Parameters(
+                    parameters: ToolParameters(
                         type: "object",
                         properties: [
-                            "query": PropertyDetails(
+                            "query": ParameterProperty(
                                 type: "string",
                                 description: "The search query to find policy information"
                             )
                         ],
                         required: ["query"]
-                    ),
-                    strict: true
+                    )
                 )
             )
         ]
