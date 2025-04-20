@@ -6,7 +6,7 @@
 
 import SwiftUI
 
-// MARK: - Models
+// Models
 struct Doctor: Identifiable, Hashable {
     let id = UUID()
     let name: String
@@ -27,7 +27,7 @@ struct Appointment: Identifiable {
     }
 }
 
-// MARK: - Views
+// Views
 struct ScheduleView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""

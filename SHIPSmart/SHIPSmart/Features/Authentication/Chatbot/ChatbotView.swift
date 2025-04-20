@@ -1,7 +1,7 @@
 import SwiftUI
 import NaturalLanguage
 
-// MARK: - Models and Components
+// Models and Components
 
 enum ChatComponents {
     struct Message: Identifiable {
@@ -205,7 +205,7 @@ struct ThreeDotIndicator: View {
     }
 }
 
-// MARK: - Main View
+//Main View
 
 struct ChatbotView: View {
     @Environment(\.dismiss) private var dismiss
@@ -327,7 +327,7 @@ struct MessageBubble: View {
     }
 }
 
-// MARK: - Preview
+// Preview
 
 #Preview {
     ChatbotView()

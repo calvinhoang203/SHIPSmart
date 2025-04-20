@@ -111,7 +111,7 @@ class ChatbotViewModel: ObservableObject {
     }
 }
 
-// MARK: - API Response Models
+// API Response Models
 struct AgentResponse: Codable {
     let id: String
 }
